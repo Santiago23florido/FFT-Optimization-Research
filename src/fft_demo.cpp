@@ -1,5 +1,4 @@
 #include "fft/fft_dispatch.hpp"
-#include "fft/fft_radix2_iterative.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -16,6 +15,10 @@
 #include <vector>
 
 namespace {
+
+bool is_power_of_two(std::size_t n) {
+    return n != 0 && (n & (n - 1U)) == 0;
+}
 
 struct Options {
     std::size_t n = 16;
@@ -34,7 +37,7 @@ void print_help(const char* program_name) {
               << "Options:\n"
               << "  --N <length>         Signal length (required).\n"
               << "  --tone <k>           Tone index k (required, wrapped modulo N).\n"
-              << "  --algorithm <name>   FFT model: radix2_iterative, radix2_recursive, direct_dft.\n"
+              << "  --algorithm <name>   FFT model: radix2_iterative, radix2_recursive, split_radix, direct_dft.\n"
               << "  --real_sine          Generate x[n] = sin(2*pi*k*n/N).\n"
               << "  --complex_tone       Generate x[n] = exp(j*2*pi*k*n/N).\n"
               << "  --csv <file>         Write spectrum magnitudes as CSV (k,magnitude).\n"
@@ -100,7 +103,7 @@ int parse_args(int argc, char** argv, Options& options, std::string& error) {
             const std::string name = argv[++i];
             const std::optional<fft::Algorithm> parsed = fft::parse_algorithm_name(name);
             if (!parsed.has_value()) {
-                error = "Invalid value for --algorithm. Use radix2_iterative, radix2_recursive, or direct_dft.";
+                error = "Invalid value for --algorithm. Use radix2_iterative, radix2_recursive, split_radix, or direct_dft.";
                 return -1;
             }
             options.algorithm = *parsed;
@@ -139,8 +142,8 @@ int parse_args(int argc, char** argv, Options& options, std::string& error) {
         error = "--N must be greater than zero.";
         return -1;
     }
-    if (options.algorithm != fft::Algorithm::DirectDft && !fft::radix2_iterative::is_power_of_two(options.n)) {
-        error = "Selected radix-2 algorithm requires --N to be a non-zero power of two.";
+    if (options.algorithm != fft::Algorithm::DirectDft && !is_power_of_two(options.n)) {
+        error = "Selected FFT algorithm requires --N to be a non-zero power of two.";
         return -1;
     }
     if (options.real_sine && options.complex_tone) {

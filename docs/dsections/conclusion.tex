@@ -1,5 +1,7 @@
 \section{Conclusion}
 
-This document presents a rigorously specified radix-2 FFT/IFFT implementation strategy grounded in formal DFT definitions, explicit sign conventions, and deterministic inverse normalization. By pairing an iterative in-place algorithm with a direct DFT reference and strict automated tests, the project establishes a verifiable baseline for spectral computing in C++20.
+This work now provides a four-model spectral computation baseline in C++20: iterative radix-2 FFT, recursive radix-2 FFT, split-radix FFT, and a direct DFT reference. The implementations are grounded in explicit Fourier sign conventions, deterministic inverse normalization, and strict automated verification against reference behavior.
 
-This baseline supports future extensions such as mixed-radix decomposition, real-input specialization, SIMD acceleration, and planner-based optimization \cite{frigo2005}, while preserving a mathematically auditable core.
+Benchmark results confirm the expected asymptotic gap between FFT models and direct DFT. They also show that split-radix variants deliver meaningful runtime and throughput improvements over recursive radix-2 in this environment, but do not surpass the iterative radix-2 implementation for the tested sizes. This behavior is consistent with practical trade-offs: split-radix reduces arithmetic operations, yet memory-access patterns, data movement, and traversal overhead remain relevant on modern desktop CPUs.
+
+The resulting framework supports future extensions such as mixed-radix decomposition, real-input specialization, SIMD acceleration, planner-based optimization \cite{frigo2005}, and embedded profiling, while preserving a mathematically auditable core.

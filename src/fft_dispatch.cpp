@@ -3,6 +3,7 @@
 #include "fft/dft_reference.hpp"
 #include "fft/fft_radix2_iterative.hpp"
 #include "fft/fft_radix2_recursive.hpp"
+#include "fft/fft_split_radix.hpp"
 
 #include <string>
 
@@ -14,6 +15,8 @@ const char* algorithm_name(Algorithm algorithm) {
             return "radix2_iterative";
         case Algorithm::Radix2Recursive:
             return "radix2_recursive";
+        case Algorithm::SplitRadix:
+            return "split_radix";
         case Algorithm::DirectDft:
             return "direct_dft";
     }
@@ -27,6 +30,9 @@ std::optional<Algorithm> parse_algorithm_name(std::string_view name) {
     if (name == "radix2_recursive" || name == "recursive") {
         return Algorithm::Radix2Recursive;
     }
+    if (name == "split_radix" || name == "split-radix" || name == "split") {
+        return Algorithm::SplitRadix;
+    }
     if (name == "direct_dft" || name == "dft" || name == "reference") {
         return Algorithm::DirectDft;
     }
@@ -34,7 +40,12 @@ std::optional<Algorithm> parse_algorithm_name(std::string_view name) {
 }
 
 std::vector<Algorithm> supported_algorithms() {
-    return {Algorithm::Radix2Iterative, Algorithm::Radix2Recursive, Algorithm::DirectDft};
+    return {
+        Algorithm::Radix2Iterative,
+        Algorithm::Radix2Recursive,
+        Algorithm::SplitRadix,
+        Algorithm::DirectDft,
+    };
 }
 
 void fft_inplace(std::vector<std::complex<double>>& x, Algorithm algorithm) {
@@ -44,6 +55,9 @@ void fft_inplace(std::vector<std::complex<double>>& x, Algorithm algorithm) {
             return;
         case Algorithm::Radix2Recursive:
             radix2_recursive::fft_inplace(x);
+            return;
+        case Algorithm::SplitRadix:
+            split_radix::fft_inplace(x);
             return;
         case Algorithm::DirectDft:
             x = dft_reference(x);
@@ -59,6 +73,9 @@ void ifft_inplace(std::vector<std::complex<double>>& x, Algorithm algorithm) {
         case Algorithm::Radix2Recursive:
             radix2_recursive::ifft_inplace(x);
             return;
+        case Algorithm::SplitRadix:
+            split_radix::ifft_inplace(x);
+            return;
         case Algorithm::DirectDft:
             x = idft_reference(x);
             return;
@@ -73,6 +90,14 @@ std::vector<std::complex<double>> fft(std::vector<std::complex<double>> x, Algor
 std::vector<std::complex<double>> ifft(std::vector<std::complex<double>> x, Algorithm algorithm) {
     ifft_inplace(x, algorithm);
     return x;
+}
+
+void fft_split_radix_inplace(std::vector<std::complex<double>>& x) {
+    split_radix::fft_inplace(x);
+}
+
+void ifft_split_radix_inplace(std::vector<std::complex<double>>& x) {
+    split_radix::ifft_inplace(x);
 }
 
 }  // namespace fft

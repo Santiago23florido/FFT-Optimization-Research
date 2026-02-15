@@ -1,5 +1,7 @@
 \section{Algorithm and Implementation Mapping}
 
+The codebase evaluates four transform models under the same interface: iterative radix-2 FFT, recursive radix-2 FFT, split-radix FFT, and a direct \(O(N^2)\) DFT reference. This section details the mapping used by the radix-2 iterative baseline, while the split-radix-specific decomposition is detailed in Section \ref{sec:split_radix_fft}.
+
 \subsection{Iterative In-Place Kernel}
 
 The implementation processes stages with block lengths \(L=2,4,\ldots,N\). For each block start index \(i\) and local offset \(j\in[0,L/2-1]\):

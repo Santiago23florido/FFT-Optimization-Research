@@ -2,7 +2,7 @@
 
 \subsection{Automated Test Set}
 
-Verification is executed through CTest and a self-contained test executable. The suite includes:
+Verification is executed through CTest and a self-contained test executable. The FFT-oriented checks are applied to all power-of-two FFT models (iterative radix-2, recursive radix-2, and split-radix), and the direct DFT model is validated through dedicated checks. The suite includes:
 \begin{itemize}
 \item \textbf{Round-trip stability:} for powers of two from \(N=2\) to \(N=4096\), verify \(\mathrm{IFFT}(\mathrm{FFT}(x))\approx x\) using random complex vectors with fixed seed.
 \item \textbf{Reference agreement:} for \(N\leq 256\), compare each FFT bin against the direct \(O(N^2)\) DFT.

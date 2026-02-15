@@ -11,6 +11,7 @@ add_library(fft_lib
     src/fft_dispatch.cpp
     src/fft_radix2_iterative.cpp
     src/fft_radix2_recursive.cpp
+    src/fft_split_radix.cpp
     src/dft_reference.cpp
 )
 
