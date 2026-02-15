@@ -1,11 +1,11 @@
-#include "fft/fft.hpp"
+#include "fft/fft_radix2_iterative.hpp"
 
 #include <cmath>
 #include <numbers>
 #include <stdexcept>
 #include <utility>
 
-namespace fft {
+namespace fft::radix2_iterative {
 namespace {
 
 std::size_t reverse_bits(std::size_t value, std::size_t bit_count) {
@@ -35,7 +35,7 @@ void bit_reversal_permute(std::vector<std::complex<double>>& x) {
 void fft_core(std::vector<std::complex<double>>& x, bool inverse) {
     const std::size_t n = x.size();
     if (!is_power_of_two(n)) {
-        throw std::invalid_argument("FFT input size must be a non-zero power of two.");
+        throw std::invalid_argument("Radix-2 iterative FFT input size must be a non-zero power of two.");
     }
 
     bit_reversal_permute(x);
@@ -90,4 +90,4 @@ std::vector<std::complex<double>> ifft(std::vector<std::complex<double>> x) {
     return x;
 }
 
-}  // namespace fft
+}  // namespace fft::radix2_iterative

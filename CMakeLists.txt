@@ -8,7 +8,9 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 enable_testing()
 
 add_library(fft_lib
-    src/fft.cpp
+    src/fft_dispatch.cpp
+    src/fft_radix2_iterative.cpp
+    src/fft_radix2_recursive.cpp
     src/dft_reference.cpp
 )
 
@@ -36,5 +38,9 @@ configure_target_warnings(fft_demo)
 add_executable(test_fft tests/test_fft.cpp)
 target_link_libraries(test_fft PRIVATE fft_lib)
 configure_target_warnings(test_fft)
+
+add_executable(fft_benchmark src/fft_benchmark.cpp)
+target_link_libraries(fft_benchmark PRIVATE fft_lib)
+configure_target_warnings(fft_benchmark)
 
 add_test(NAME test_fft COMMAND test_fft)

@@ -1,11 +1,11 @@
-#ifndef FFT_FFT_HPP
-#define FFT_FFT_HPP
+#ifndef FFT_FFT_RADIX2_ITERATIVE_HPP
+#define FFT_FFT_RADIX2_ITERATIVE_HPP
 
 #include <complex>
 #include <cstddef>
 #include <vector>
 
-namespace fft {
+namespace fft::radix2_iterative {
 
 bool is_power_of_two(std::size_t n);
 
@@ -15,6 +15,6 @@ void ifft_inplace(std::vector<std::complex<double>>& x);
 std::vector<std::complex<double>> fft(std::vector<std::complex<double>> x);
 std::vector<std::complex<double>> ifft(std::vector<std::complex<double>> x);
 
-}  // namespace fft
+}  // namespace fft::radix2_iterative
 
 #endif

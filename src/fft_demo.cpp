@@ -1,4 +1,5 @@
-#include "fft/fft.hpp"
+#include "fft/fft_dispatch.hpp"
+#include "fft/fft_radix2_iterative.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -8,6 +9,7 @@
 #include <iostream>
 #include <limits>
 #include <numbers>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -18,6 +20,7 @@ namespace {
 struct Options {
     std::size_t n = 16;
     std::size_t tone = 1;
+    fft::Algorithm algorithm = fft::Algorithm::Radix2Iterative;
     bool real_sine = false;
     bool complex_tone = false;
     std::string csv_path;
@@ -25,11 +28,13 @@ struct Options {
 
 void print_help(const char* program_name) {
     std::cout << "Usage: " << program_name
-              << " --N <power_of_two> --tone <k> [--real_sine | --complex_tone] [--csv <file>]\n"
+              << " --N <length> --tone <k> [--algorithm <name>] [--real_sine | --complex_tone] "
+                 "[--csv <file>]\n"
               << "\n"
               << "Options:\n"
-              << "  --N <power_of_two>   Signal length (required, power of two).\n"
+              << "  --N <length>         Signal length (required).\n"
               << "  --tone <k>           Tone index k (required, wrapped modulo N).\n"
+              << "  --algorithm <name>   FFT model: radix2_iterative, radix2_recursive, direct_dft.\n"
               << "  --real_sine          Generate x[n] = sin(2*pi*k*n/N).\n"
               << "  --complex_tone       Generate x[n] = exp(j*2*pi*k*n/N).\n"
               << "  --csv <file>         Write spectrum magnitudes as CSV (k,magnitude).\n"
@@ -87,6 +92,20 @@ int parse_args(int argc, char** argv, Options& options, std::string& error) {
             has_tone = true;
             continue;
         }
+        if (arg == "--algorithm") {
+            if (i + 1 >= argc) {
+                error = "Missing value after --algorithm.";
+                return -1;
+            }
+            const std::string name = argv[++i];
+            const std::optional<fft::Algorithm> parsed = fft::parse_algorithm_name(name);
+            if (!parsed.has_value()) {
+                error = "Invalid value for --algorithm. Use radix2_iterative, radix2_recursive, or direct_dft.";
+                return -1;
+            }
+            options.algorithm = *parsed;
+            continue;
+        }
         if (arg == "--real_sine") {
             options.real_sine = true;
             continue;
@@ -116,16 +135,20 @@ int parse_args(int argc, char** argv, Options& options, std::string& error) {
         error = "Missing required argument --tone.";
         return -1;
     }
+    if (options.n == 0) {
+        error = "--N must be greater than zero.";
+        return -1;
+    }
+    if (options.algorithm != fft::Algorithm::DirectDft && !fft::radix2_iterative::is_power_of_two(options.n)) {
+        error = "Selected radix-2 algorithm requires --N to be a non-zero power of two.";
+        return -1;
+    }
     if (options.real_sine && options.complex_tone) {
         error = "Choose only one signal type: --real_sine or --complex_tone.";
         return -1;
     }
     if (!options.real_sine && !options.complex_tone) {
         options.complex_tone = true;
-    }
-    if (!fft::is_power_of_two(options.n)) {
-        error = "--N must be a non-zero power of two.";
-        return -1;
     }
 
     return 0;
@@ -198,7 +221,7 @@ int main(int argc, char** argv) {
 
         const std::size_t tone_mod_n = options.tone % options.n;
         const std::vector<std::complex<double>> signal = generate_signal(options, tone_mod_n);
-        const std::vector<std::complex<double>> spectrum = fft::fft(signal);
+        const std::vector<std::complex<double>> spectrum = fft::fft(signal, options.algorithm);
 
         if (!options.csv_path.empty()) {
             write_csv(options.csv_path, spectrum);
@@ -209,6 +232,7 @@ int main(int argc, char** argv) {
         std::cout << std::fixed << std::setprecision(6);
         std::cout << "N: " << options.n << '\n';
         std::cout << "Tone index k: " << tone_mod_n << '\n';
+        std::cout << "Algorithm: " << fft::algorithm_name(options.algorithm) << '\n';
         std::cout << "Signal type: " << (options.real_sine ? "real_sine" : "complex_tone") << '\n';
         if (options.tone != tone_mod_n) {
             std::cout << "Input tone wrapped modulo N: " << options.tone << " -> " << tone_mod_n << '\n';

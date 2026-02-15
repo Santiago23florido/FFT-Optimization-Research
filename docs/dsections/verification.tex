@@ -19,13 +19,6 @@ consistent with the chosen normalization.
 
 Double-precision tolerances are set to \(10^{-10}\) for round-trip relative \(L_2\) error, bin-wise FFT-vs-DFT absolute error, and Parseval relative mismatch. A \(10^{-8}\) leakage bound is used for off-peak bins in pure-tone tests. These values reflect expected floating-point accumulation and trigonometric evaluation error under IEEE-754 arithmetic \cite{ieee754}.
 
-\subsection{Reproducible Execution}
+\subsection{Expected Spectral Behavior}
 
-The verification pipeline is:
-\begin{verbatim}
-cmake -S . -B build
-cmake --build build --config Release
-ctest --test-dir build -C Release
-\end{verbatim}
-
-A single-tone demo is expected to show a dominant bin at \(k\) for complex tone mode, and symmetric peaks at \(k\) and \(N-k\) for real sine mode.
+A single-tone complex exponential is expected to produce one dominant peak at the target bin \(k\). A real sine wave is expected to produce two symmetric dominant peaks at \(k\) and \(N-k\), consistent with conjugate symmetry for real-valued time signals.

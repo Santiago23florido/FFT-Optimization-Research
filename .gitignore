@@ -21,6 +21,9 @@ Makefile
 # Logs and temporary files
 *.log
 *.tmp
+benchmark_results/
+fft_benchmark_summary.csv
+fft_benchmark_raw.csv
 
 # LaTeX build artifacts
 *.aux
@@ -31,3 +34,4 @@ Makefile
 *.out
 *.synctex.gz
 *.toc
+docs/fft_ieee_paper.pdf
