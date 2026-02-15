@@ -10,6 +10,7 @@ namespace fft {
 
 enum class Algorithm {
     Radix2Iterative,
+    MixedRadix42Iterative,
     Radix2Recursive,
     SplitRadix,
     DirectDft
@@ -27,6 +28,8 @@ std::vector<std::complex<double>> ifft(std::vector<std::complex<double>> x, Algo
 
 void fft_split_radix_inplace(std::vector<std::complex<double>>& x);
 void ifft_split_radix_inplace(std::vector<std::complex<double>>& x);
+void fft_mixed_radix_4_2_inplace(std::vector<std::complex<double>>& x);
+void ifft_mixed_radix_4_2_inplace(std::vector<std::complex<double>>& x);
 
 }  // namespace fft
 

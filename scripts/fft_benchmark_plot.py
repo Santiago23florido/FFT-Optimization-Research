@@ -14,6 +14,7 @@ from pathlib import Path
 
 ALGORITHM_LABELS: dict[str, str] = {
     "radix2_iterative": "Radix-2 Iterative",
+    "mixed_radix_4_2_iterative": "Mixed Radix (4/2)",
     "radix2_recursive": "Radix-2 Recursive",
     "split_radix": "Split-Radix",
     "direct_dft": "Direct DFT",
@@ -21,9 +22,10 @@ ALGORITHM_LABELS: dict[str, str] = {
 
 ALGORITHM_ORDER: dict[str, int] = {
     "radix2_iterative": 0,
-    "radix2_recursive": 1,
-    "split_radix": 2,
-    "direct_dft": 3,
+    "mixed_radix_4_2_iterative": 1,
+    "radix2_recursive": 2,
+    "split_radix": 3,
+    "direct_dft": 4,
 }
 
 
@@ -134,7 +136,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--algorithms",
-        default="radix2_iterative,radix2_recursive,split_radix,direct_dft",
+        default="radix2_iterative,mixed_radix_4_2_iterative,radix2_recursive,split_radix,direct_dft",
         help="Comma-separated algorithm list.",
     )
     parser.add_argument("--iterations", type=int, default=40, help="Measured iterations per case.")

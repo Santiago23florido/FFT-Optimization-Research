@@ -24,6 +24,7 @@ constexpr double kParsevalTolerance = 1e-10;
 std::vector<fft::Algorithm> power_of_two_algorithms() {
     return {
         fft::Algorithm::Radix2Iterative,
+        fft::Algorithm::MixedRadix42Iterative,
         fft::Algorithm::Radix2Recursive,
         fft::Algorithm::SplitRadix,
     };
@@ -32,6 +33,7 @@ std::vector<fft::Algorithm> power_of_two_algorithms() {
 std::vector<fft::Algorithm> all_algorithms() {
     return {
         fft::Algorithm::Radix2Iterative,
+        fft::Algorithm::MixedRadix42Iterative,
         fft::Algorithm::Radix2Recursive,
         fft::Algorithm::SplitRadix,
         fft::Algorithm::DirectDft,
@@ -143,6 +145,29 @@ void test_fft_matches_dft_reference() {
     }
 }
 
+void test_mixed_matches_radix2_iterative() {
+    std::mt19937_64 rng(0x77777777ULL);
+
+    for (std::size_t n = 2; n <= 4096; n <<= 1U) {
+        for (int sample = 0; sample < 4; ++sample) {
+            const auto x = random_complex_vector(n, rng);
+            const auto mixed = fft::fft(x, fft::Algorithm::MixedRadix42Iterative);
+            const auto radix2 = fft::fft(x, fft::Algorithm::Radix2Iterative);
+
+            for (std::size_t k = 0; k < n; ++k) {
+                const double err = abs_error(mixed[k], radix2[k]);
+                if (err >= kBinTolerance) {
+                    std::ostringstream oss;
+                    oss << "Mixed radix output-order/value mismatch vs radix2_iterative, N=" << n
+                        << ", sample=" << sample << ", bin=" << k << ": error=" << std::setprecision(16) << err
+                        << " (tolerance " << kBinTolerance << ')';
+                    throw std::runtime_error(oss.str());
+                }
+            }
+        }
+    }
+}
+
 void test_pure_complex_tone() {
     const std::size_t n = 256;
     const std::size_t tone = 37;
@@ -236,6 +261,8 @@ void test_invalid_size_rejection() {
 
 void test_algorithm_parser() {
     expect(fft::parse_algorithm_name("radix2_iterative").has_value(), "Failed to parse radix2_iterative.");
+    expect(fft::parse_algorithm_name("mixed_radix_4_2_iterative").has_value(),
+           "Failed to parse mixed_radix_4_2_iterative.");
     expect(fft::parse_algorithm_name("radix2_recursive").has_value(), "Failed to parse radix2_recursive.");
     expect(fft::parse_algorithm_name("split_radix").has_value(), "Failed to parse split_radix.");
     expect(fft::parse_algorithm_name("direct_dft").has_value(), "Failed to parse direct_dft.");
@@ -280,6 +307,7 @@ int main() {
     runner.run("Round-trip ifft(fft(x)) for all power-of-two FFT models", test_round_trip_power_of_two_algorithms);
     runner.run("Round-trip ifft(fft(x)) for direct DFT model", test_round_trip_direct_dft);
     runner.run("FFT models match O(N^2) DFT", test_fft_matches_dft_reference);
+    runner.run("Mixed radix matches radix2 iterative output order and values", test_mixed_matches_radix2_iterative);
     runner.run("Pure complex tone concentration", test_pure_complex_tone);
     runner.run("Parseval identity", test_parseval_identity);
     runner.run("Invalid size rejection", test_invalid_size_rejection);
