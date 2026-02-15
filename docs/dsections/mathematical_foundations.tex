@@ -1,0 +1,53 @@
+\section{Mathematical Foundations}
+
+\subsection{DFT and IDFT Definitions}
+
+For a length-\(N\) complex sequence \(x[n]\), the forward transform is
+\begin{equation}
+X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N},\quad k=0,\ldots,N-1,
+\label{eq:dft}
+\end{equation}
+and the inverse transform is
+\begin{equation}
+x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k] e^{+j2\pi kn/N},\quad n=0,\ldots,N-1.
+\label{eq:idft}
+\end{equation}
+The implementation follows this sign convention exactly and applies normalization only in the inverse path.
+
+\subsection{Roots of Unity and Notation}
+
+Define
+\begin{equation}
+W_N = e^{-j2\pi/N},
+\end{equation}
+so that \(W_N^{kn}=e^{-j2\pi kn/N}\). Equation \eqref{eq:dft} becomes
+\begin{equation}
+X[k] = \sum_{n=0}^{N-1} x[n] W_N^{kn}.
+\end{equation}
+This notation enables compact derivation of radix-2 factorization.
+
+\subsection{Radix-2 Cooley-Tukey Decomposition}
+
+Assume \(N=2^m\). Split the sequence into even and odd indices:
+\begin{equation}
+X[k]=\sum_{r=0}^{N/2-1}x[2r]W_N^{k(2r)}+\sum_{r=0}^{N/2-1}x[2r+1]W_N^{k(2r+1)}.
+\end{equation}
+Using \(W_N^2=W_{N/2}\), define
+\begin{equation}
+E[k]=\sum_{r=0}^{N/2-1}x[2r]W_{N/2}^{kr},\quad
+O[k]=\sum_{r=0}^{N/2-1}x[2r+1]W_{N/2}^{kr},
+\end{equation}
+then
+\begin{align}
+X[k] &= E[k] + W_N^k O[k],\label{eq:butterfly_a}\\
+X[k+N/2] &= E[k] - W_N^k O[k].\label{eq:butterfly_b}
+\end{align}
+Equations \eqref{eq:butterfly_a} and \eqref{eq:butterfly_b} are the radix-2 butterfly relations.
+
+\subsection{Bit-Reversal Permutation}
+
+In an iterative decimation-in-time schedule, input indices are permuted by reversing their \(m\)-bit binary representation before stage-wise butterflies are applied. This permutation maps recursive subproblem order into contiguous in-place blocks. Without it, stage-local butterfly connectivity is violated and final bins are scrambled.
+
+\subsection{Complexity}
+
+A direct DFT computes \(N\) outputs, each with \(N\) terms, yielding \(\Theta(N^2)\). The radix-2 FFT performs \(\log_2 N\) stages with \(\Theta(N)\) work per stage, yielding \(\Theta(N\log_2 N)\). This is the computational foundation for real-time spectral systems.

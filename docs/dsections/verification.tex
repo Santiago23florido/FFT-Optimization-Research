@@ -1,0 +1,31 @@
+\section{Verification Methodology}
+
+\subsection{Automated Test Set}
+
+Verification is executed through CTest and a self-contained test executable. The suite includes:
+\begin{itemize}
+\item \textbf{Round-trip stability:} for powers of two from \(N=2\) to \(N=4096\), verify \(\mathrm{IFFT}(\mathrm{FFT}(x))\approx x\) using random complex vectors with fixed seed.
+\item \textbf{Reference agreement:} for \(N\leq 256\), compare each FFT bin against the direct \(O(N^2)\) DFT.
+\item \textbf{Pure-tone localization:} for \(x[n]=e^{j2\pi kn/N}\), verify dominant energy at bin \(k\) and near-zero leakage elsewhere.
+\item \textbf{Parseval consistency:} verify
+\begin{equation}
+\sum_n |x[n]|^2 \approx \frac{1}{N}\sum_k |X[k]|^2,
+\end{equation}
+consistent with the chosen normalization.
+\item \textbf{Input constraints:} verify rejection of non-power-of-two sizes.
+\end{itemize}
+
+\subsection{Tolerances and Rationale}
+
+Double-precision tolerances are set to \(10^{-10}\) for round-trip relative \(L_2\) error, bin-wise FFT-vs-DFT absolute error, and Parseval relative mismatch. A \(10^{-8}\) leakage bound is used for off-peak bins in pure-tone tests. These values reflect expected floating-point accumulation and trigonometric evaluation error under IEEE-754 arithmetic \cite{ieee754}.
+
+\subsection{Reproducible Execution}
+
+The verification pipeline is:
+\begin{verbatim}
+cmake -S . -B build
+cmake --build build --config Release
+ctest --test-dir build -C Release
+\end{verbatim}
+
+A single-tone demo is expected to show a dominant bin at \(k\) for complex tone mode, and symmetric peaks at \(k\) and \(N-k\) for real sine mode.

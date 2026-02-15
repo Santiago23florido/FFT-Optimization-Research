@@ -1,0 +1,73 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\begin{document}
+
+\title{Radix-2 FFT in C++20: Correctness-Centered Design, Mathematical Rigor, and Automated Verification}
+
+\author{
+\IEEEauthorblockN{1\textsuperscript{st} Author Name}
+\IEEEauthorblockA{\textit{Department or Research Group} \\
+\textit{Organization}\\
+City, Country \\
+email@example.com}
+\and
+\IEEEauthorblockN{2\textsuperscript{nd} Author Name}
+\IEEEauthorblockA{\textit{Department or Research Group} \\
+\textit{Organization}\\
+City, Country \\
+email@example.com}
+\and
+\IEEEauthorblockN{3\textsuperscript{rd} Author Name}
+\IEEEauthorblockA{\textit{Department or Research Group} \\
+\textit{Organization}\\
+City, Country \\
+email@example.com}
+}
+
+\maketitle
+
+\begin{abstract}
+\input{dsections/abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+fast Fourier transform, radix-2, Cooley-Tukey, spectral analysis, numerical verification, C++20
+\end{IEEEkeywords}
+
+\input{dsections/introduction}
+\input{dsections/mathematical_foundations}
+\input{dsections/algorithm_and_implementation}
+\input{dsections/verification}
+\input{dsections/applications}
+\input{dsections/conclusion}
+
+\section*{Acknowledgment}
+This work did not receive external funding.
+
+\begin{thebibliography}{00}
+\bibitem{cooley1965}
+J. W. Cooley and J. W. Tukey, "An algorithm for the machine calculation of complex Fourier series," \textit{Mathematics of Computation}, vol. 19, no. 90, pp. 297--301, 1965.
+
+\bibitem{oppenheim1999}
+A. V. Oppenheim, R. W. Schafer, and J. R. Buck, \textit{Discrete-Time Signal Processing}, 2nd ed. Upper Saddle River, NJ, USA: Prentice Hall, 1999.
+
+\bibitem{bracewell2000}
+R. N. Bracewell, \textit{The Fourier Transform and Its Applications}, 3rd ed. New York, NY, USA: McGraw-Hill, 2000.
+
+\bibitem{frigo2005}
+M. Frigo and S. G. Johnson, "The design and implementation of FFTW3," \textit{Proceedings of the IEEE}, vol. 93, no. 2, pp. 216--231, Feb. 2005.
+
+\bibitem{ieee754}
+IEEE Standard for Floating-Point Arithmetic, IEEE Std 754-2019, 2019.
+\end{thebibliography}
+
+\end{document}

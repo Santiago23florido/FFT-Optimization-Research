@@ -1,0 +1,5 @@
+\section{Conclusion}
+
+This document presents a rigorously specified radix-2 FFT/IFFT implementation strategy grounded in formal DFT definitions, explicit sign conventions, and deterministic inverse normalization. By pairing an iterative in-place algorithm with a direct DFT reference and strict automated tests, the project establishes a verifiable baseline for spectral computing in C++20.
+
+This baseline supports future extensions such as mixed-radix decomposition, real-input specialization, SIMD acceleration, and planner-based optimization \cite{frigo2005}, while preserving a mathematically auditable core.

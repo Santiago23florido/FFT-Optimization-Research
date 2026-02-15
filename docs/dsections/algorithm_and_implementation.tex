@@ -1,0 +1,31 @@
+\section{Algorithm and Implementation Mapping}
+
+\subsection{Iterative In-Place Kernel}
+
+The implementation processes stages with block lengths \(L=2,4,\ldots,N\). For each block start index \(i\) and local offset \(j\in[0,L/2-1]\):
+\begin{align}
+u &= x[i+j],\\
+v &= x[i+j+L/2]\,W_L^j,
+\end{align}
+then updates
+\begin{align}
+x[i+j] &\leftarrow u+v,\\
+x[i+j+L/2] &\leftarrow u-v.
+\end{align}
+This mapping is a direct implementation of the butterfly equations.
+
+\subsection{Twiddle Generation Strategy}
+
+At each stage, the principal stage twiddle \(W_L=e^{\pm j2\pi/L}\) is computed once. Per-butterfly twiddles are obtained by recurrence \(w\leftarrow wW_L\) within each block. This avoids storing global twiddle tables while preserving deterministic behavior and numerical clarity.
+
+\subsection{Inverse Transform}
+
+The inverse transform reuses the same kernel with opposite sign in the exponential and applies a final scaling by \(1/N\). This ensures consistency with \eqref{eq:idft} and supports stable round-trip reconstruction.
+
+\subsection{Input Validation}
+
+Because the chosen factorization is radix-2, valid sizes must satisfy \(N\neq 0\) and \(N\) power-of-two. Invalid sizes throw \texttt{std::invalid\_argument} with an explicit message, preventing undefined spectral behavior.
+
+\subsection{Implementation Notes}
+
+The code is written in C++20 with only the standard library, using \texttt{std::complex<double>} for numerical representation. The design goal is not architecture-specific peak throughput but reference-quality correctness that remains portable across Linux and Windows toolchains.

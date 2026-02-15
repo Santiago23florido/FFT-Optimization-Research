@@ -1,0 +1,17 @@
+\section{Introduction}
+
+The fast Fourier transform (FFT) is one of the most consequential algorithms in computational science because it reduces the complexity of spectral analysis from \(O(N^2)\) to \(O(N\log_2 N)\) \cite{cooley1965}. This complexity reduction is not only asymptotic theory; it determines practical feasibility in systems constrained by real-time deadlines, bounded power budgets, and finite memory bandwidth.
+
+In modern engineering, many physical phenomena are observed or controlled in time or space domains but are most interpretable in the frequency domain. Spectral decomposition is therefore central to communication receivers, radar processing chains, medical imaging reconstruction, vibration diagnostics, acoustic scene analysis, geophysical inversion, and computational physics. In these systems, FFT quality directly influences detection sensitivity, parameter estimation bias, and downstream model robustness.
+
+From a numerical perspective, FFT implementations are also a reliability-critical component. Small indexing errors in butterfly updates, incorrect exponential signs, or misplaced normalization can silently produce spectra that appear plausible yet are physically wrong. Such defects propagate into control loops, inverse problems, and machine-learning feature pipelines. For this reason, an FFT implementation should be delivered with explicit mathematical conventions and independent verification against a direct DFT baseline.
+
+This work addresses that requirement through a C++20, standard-library-only implementation of radix-2 FFT/IFFT and a test methodology that prioritizes reproducibility, deterministic error reporting, and traceable agreement with Fourier definitions \cite{oppenheim1999}, \cite{bracewell2000}. The main contributions are:
+
+\begin{itemize}
+\item an iterative in-place radix-2 FFT with explicit bit-reversal permutation;
+\item a definition-aligned \(O(N^2)\) DFT/IDFT reference implementation;
+\item automated validation with strict tolerances for round-trip accuracy, bin-wise agreement, tone localization, and energy conservation.
+\end{itemize}
+
+The resulting project forms a rigorous baseline that can be extended toward optimized kernels, mixed-radix strategies, and architecture-specific acceleration while preserving a verifiable correctness core.
