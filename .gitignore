@@ -34,4 +34,3 @@ fft_benchmark_raw.csv
 *.out
 *.synctex.gz
 *.toc
-docs/fft_ieee_paper.pdf
