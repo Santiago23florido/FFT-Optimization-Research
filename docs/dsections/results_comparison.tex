@@ -1,31 +1,33 @@
 \section{Benchmark Results and Comparison}
 
-This section compares the implemented transform models using an automated benchmark and plotting workflow. The evaluated algorithms are \texttt{radix2\_iterative}, \texttt{radix2\_recursive}, \texttt{split\_radix}, and \texttt{direct\_dft}. The measured sizes are \(N\in\{64,128,256,512,1024\}\), with 3 warmup iterations and 20 measured iterations per pair \((\text{algorithm},N)\), using seed 1337.
+This section reports the primary algorithmic comparison study. The evaluated models are:
+\texttt{radix2\_aos}, \texttt{mixed42\_aos}, \texttt{radix2\_recursive}, \texttt{split\_radix}, and \texttt{direct\_dft}.  
+The benchmark uses \(N\in\{64,128,256,512,1024,2048,4096\}\), 5 warmup iterations, 40 measured iterations, and a fixed seed.
 
-The plotted quantities are extracted from the benchmark summary data:
+The reported figures summarize:
 \begin{itemize}
 \item transform length \(N\);
-\item average runtime per transform (microseconds);
-\item throughput (processed samples per second).
-\item Additional measured descriptors (not shown in the two figures below): median runtime, best-case runtime, worst-case runtime, runtime dispersion (standard deviation), tail latency at the 95th percentile, normalized runtime per sample, and normalized runtime per \(N\log_2 N\).
+\item average runtime per transform;
+\item throughput in processed samples per second.
+\item Additional descriptors are also measured in the pipeline: median runtime, minimum and maximum runtime, runtime dispersion, high-percentile latency, and normalized costs per sample and per \(N\log_2 N\).
 \end{itemize}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/mean_runtime.png}
-\caption{Mean execution time as a function of signal length \(N\).}
+\caption{Average execution time as a function of signal length \(N\) for the primary algorithmic study.}
 \label{fig:mean_runtime}
 \end{figure}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/throughput.png}
-\caption{Throughput in samples per second as a function of signal length \(N\).}
+\caption{Throughput as a function of signal length \(N\) for the primary algorithmic study.}
 \label{fig:throughput}
 \end{figure}
 
-Figure \ref{fig:mean_runtime} shows the expected complexity separation. The \texttt{direct\_dft} curve grows much faster with \(N\), while the FFT-based models scale substantially better. In this benchmark run at \(N=1024\), mean runtime is approximately 15.27~\(\mu s\) for \texttt{radix2\_iterative}, 25.04~\(\mu s\) for \texttt{split\_radix}, 41.86~\(\mu s\) for \texttt{radix2\_recursive}, and 12,852.67~\(\mu s\) for \texttt{direct\_dft}.
+Figure \ref{fig:mean_runtime} shows the expected asymptotic separation between FFT factorizations and direct DFT. The direct \(O(N^2)\) model becomes rapidly dominant in runtime as \(N\) increases, while all FFT variants preserve the \(O(N\log_2 N)\) trend.
 
-Figure \ref{fig:throughput} presents the same comparison in throughput form. At \(N=1024\), measured throughput is about 67.1 million samples/s for \texttt{radix2\_iterative}, 40.9 million samples/s for \texttt{split\_radix}, 24.5 million samples/s for \texttt{radix2\_recursive}, and 79.7 thousand samples/s for \texttt{direct\_dft}. In this environment, split-radix improves over recursive radix-2, but remains slower than the iterative radix-2 baseline, indicating that lower arithmetic count does not automatically dominate memory traffic and traversal overhead.
+Figure \ref{fig:throughput} presents the same behavior in throughput units. Iterative implementations remain the strongest practical baseline in this environment, and recursive decompositions remain useful as algorithmic references but with lower effective throughput due to call and traversal overhead.
 
-These results are consistent with the theoretical complexity analysis and provide a reproducible quantitative baseline for future algorithm extensions and microcontroller-oriented optimization.
+This primary study provides the baseline against which the dedicated memory-layout study in Section \ref{sec:aos_soa} is interpreted.

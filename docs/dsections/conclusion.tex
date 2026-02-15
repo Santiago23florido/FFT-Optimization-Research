@@ -1,7 +1,7 @@
 \section{Conclusion}
 
-This work now provides a four-model spectral computation baseline in C++20: iterative radix-2 FFT, recursive radix-2 FFT, split-radix FFT, and a direct DFT reference. The implementations are grounded in explicit Fourier sign conventions, deterministic inverse normalization, and strict automated verification against reference behavior.
+This work provides a correctness-verified FFT framework in C++20 with two complementary benchmark layers. The primary layer compares algorithmic families (iterative radix-2, mixed radix (4/2), recursive radix-2, split-radix, and direct DFT). The secondary layer isolates memory-layout effects (AoS versus SoA) for the two strongest iterative families.
 
-Benchmark results confirm the expected asymptotic gap between FFT models and direct DFT. They also show that split-radix variants deliver meaningful runtime and throughput improvements over recursive radix-2 in this environment, but do not surpass the iterative radix-2 implementation for the tested sizes. This behavior is consistent with practical trade-offs: split-radix reduces arithmetic operations, yet memory-access patterns, data movement, and traversal overhead remain relevant on modern desktop CPUs.
+The primary study confirms the expected complexity separation: FFT factorizations preserve scalable behavior while direct DFT becomes rapidly impractical as \(N\) grows. The layout study then shows how data organization alone can shift runtime for a fixed transform definition and fixed benchmark protocol.
 
-The resulting framework supports future extensions such as mixed-radix decomposition, real-input specialization, SIMD acceleration, planner-based optimization \cite{frigo2005}, and embedded profiling, while preserving a mathematically auditable core.
+Overall, the framework now supports both algorithm-level and memory-level optimization analysis under a single reproducible pipeline. This structure is suitable for subsequent work on explicit SIMD kernels, planner-based execution strategies \cite{frigo2005}, and embedded performance portability while preserving mathematical traceability and automated verification.

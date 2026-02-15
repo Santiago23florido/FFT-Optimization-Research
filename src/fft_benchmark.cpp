@@ -1,4 +1,5 @@
 #include "fft/fft_dispatch.hpp"
+#include "fft/fft_soa.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -26,7 +27,13 @@ bool is_power_of_two(std::size_t n) {
 
 struct Options {
     std::vector<std::size_t> sizes = {64, 128, 256, 512, 1024, 2048, 4096};
-    std::vector<fft::Algorithm> algorithms = fft::supported_algorithms();
+    std::vector<fft::Algorithm> algorithms = {
+        fft::Algorithm::Radix2Iterative,
+        fft::Algorithm::MixedRadix42Iterative,
+        fft::Algorithm::Radix2Recursive,
+        fft::Algorithm::SplitRadix,
+        fft::Algorithm::DirectDft,
+    };
     std::size_t iterations = 40;
     std::size_t warmup = 5;
     std::uint64_t seed = 1337;
@@ -139,7 +146,7 @@ void print_help(const char* program_name) {
               << "\n"
               << "Options:\n"
               << "  --sizes <csv>        Signal lengths, e.g. 64,128,256,512\n"
-              << "  --algorithms <csv>   radix2_iterative,mixed_radix_4_2_iterative,radix2_recursive,split_radix,direct_dft\n"
+              << "  --algorithms <csv>   radix2_aos,mixed42_aos,radix2_recursive,split_radix,direct_dft\n"
               << "  --iterations <n>     Number of measured iterations per size/algorithm\n"
               << "  --warmup <n>         Number of warmup iterations per size/algorithm\n"
               << "  --seed <n>           Base random seed for generated input vectors\n"
@@ -304,6 +311,10 @@ void validate_size_for_algorithm(std::size_t n, fft::Algorithm algorithm) {
     }
 }
 
+bool is_soa_algorithm(fft::Algorithm algorithm) {
+    return algorithm == fft::Algorithm::Radix2SoA || algorithm == fft::Algorithm::MixedRadix42SoA;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -350,32 +361,59 @@ int main(int argc, char** argv) {
 
                 const std::uint64_t signal_seed = options.seed ^ (static_cast<std::uint64_t>(n) * 0x9E3779B97F4A7C15ULL);
                 const std::vector<std::complex<double>> base_signal = generate_signal(n, signal_seed);
-
-                for (std::size_t i = 0; i < options.warmup; ++i) {
-                    auto warm = base_signal;
-                    fft::fft_inplace(warm, algorithm);
-                }
+                const fft::ComplexSoA base_signal_soa = fft::ComplexSoA::from_aos(base_signal);
 
                 std::vector<double> durations_ns;
                 durations_ns.reserve(options.iterations);
                 double checksum = 0.0;
 
-                for (std::size_t iter = 0; iter < options.iterations; ++iter) {
-                    auto work = base_signal;
+                if (is_soa_algorithm(algorithm)) {
+                    for (std::size_t i = 0; i < options.warmup; ++i) {
+                        auto warm = base_signal_soa;
+                        fft::fft_inplace_soa(warm, algorithm);
+                    }
 
-                    const auto start = std::chrono::steady_clock::now();
-                    fft::fft_inplace(work, algorithm);
-                    const auto end = std::chrono::steady_clock::now();
+                    for (std::size_t iter = 0; iter < options.iterations; ++iter) {
+                        auto work = base_signal_soa;
 
-                    const double elapsed_ns =
-                        static_cast<double>(std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
-                    durations_ns.push_back(elapsed_ns);
+                        const auto start = std::chrono::steady_clock::now();
+                        fft::fft_inplace_soa(work, algorithm);
+                        const auto end = std::chrono::steady_clock::now();
 
-                    checksum += std::abs(work[0]);
+                        const double elapsed_ns = static_cast<double>(
+                            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
+                        durations_ns.push_back(elapsed_ns);
 
-                    if (raw_csv) {
-                        raw_csv << fft::algorithm_name(algorithm) << ',' << n << ',' << iter << ','
-                                << (elapsed_ns / 1000.0) << '\n';
+                        checksum += std::hypot(work.re[0], work.im[0]);
+
+                        if (raw_csv) {
+                            raw_csv << fft::algorithm_name(algorithm) << ',' << n << ',' << iter << ','
+                                    << (elapsed_ns / 1000.0) << '\n';
+                        }
+                    }
+                } else {
+                    for (std::size_t i = 0; i < options.warmup; ++i) {
+                        auto warm = base_signal;
+                        fft::fft_inplace(warm, algorithm);
+                    }
+
+                    for (std::size_t iter = 0; iter < options.iterations; ++iter) {
+                        auto work = base_signal;
+
+                        const auto start = std::chrono::steady_clock::now();
+                        fft::fft_inplace(work, algorithm);
+                        const auto end = std::chrono::steady_clock::now();
+
+                        const double elapsed_ns = static_cast<double>(
+                            std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count());
+                        durations_ns.push_back(elapsed_ns);
+
+                        checksum += std::abs(work[0]);
+
+                        if (raw_csv) {
+                            raw_csv << fft::algorithm_name(algorithm) << ',' << n << ',' << iter << ','
+                                    << (elapsed_ns / 1000.0) << '\n';
+                        }
                     }
                 }
 

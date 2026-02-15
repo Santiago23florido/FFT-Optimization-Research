@@ -2,10 +2,11 @@
 
 \subsection{Automated Test Set}
 
-Verification is executed through CTest and a self-contained test executable. The FFT-oriented checks are applied to all power-of-two FFT models (iterative radix-2, recursive radix-2, and split-radix), and the direct DFT model is validated through dedicated checks. The suite includes:
+Verification is executed through CTest and a self-contained test executable. The FFT-oriented checks are applied to all power-of-two FFT models, including AoS and SoA variants of iterative radix-2 and iterative mixed-radix (4/2), plus recursive radix-2 and split-radix. The direct DFT model is validated through dedicated checks. The suite includes:
 \begin{itemize}
 \item \textbf{Round-trip stability:} for powers of two from \(N=2\) to \(N=4096\), verify \(\mathrm{IFFT}(\mathrm{FFT}(x))\approx x\) using random complex vectors with fixed seed.
 \item \textbf{Reference agreement:} for \(N\leq 256\), compare each FFT bin against the direct \(O(N^2)\) DFT.
+\item \textbf{Layout consistency:} verify that SoA outputs match their AoS counterparts for the same input and ordering convention.
 \item \textbf{Pure-tone localization:} for \(x[n]=e^{j2\pi kn/N}\), verify dominant energy at bin \(k\) and near-zero leakage elsewhere.
 \item \textbf{Parseval consistency:} verify
 \begin{equation}
