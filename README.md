@@ -86,6 +86,26 @@ Generated artifacts:
 
 `matplotlib` is required for plots.
 
+## Final optimization results (AoS vs SoA)
+
+Using `docs/figures/layout_optimization/fft_layout_summary.csv` (40 iterations, 5 warmups), the final layout optimization shows consistent gains for SoA kernels.
+
+- `radix2_soa` mean runtime improvement vs `radix2_aos`: `1.93x` average over `N=64..4096`
+- `mixed42_soa` mean runtime improvement vs `mixed42_aos`: `1.62x` average over `N=64..4096`
+- For `N >= 128`, `mixed42_soa` is the fastest kernel in this study
+- Peak observed throughput: `214.81M samples/s` (`mixed42_soa`, `N=512`)
+
+| Size (N) | radix2_aos (mean us) | radix2_soa (mean us) | Speedup | mixed42_aos (mean us) | mixed42_soa (mean us) | Speedup |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1024 | 14.6696 | 6.7693 | 2.17x | 8.0032 | 5.1472 | 1.55x |
+| 4096 | 74.4707 | 34.7303 | 2.14x | 41.8061 | 27.4085 | 1.53x |
+
+### Result figures
+
+![Mean runtime comparison](docs/figures/mean_runtime.png)
+![Radix-2 runtime: AoS vs SoA](docs/figures/layout_optimization/radix2_aos_vs_soa_runtime.png)
+![Mixed radix (4/2) runtime: AoS vs SoA](docs/figures/layout_optimization/mixed42_aos_vs_soa_runtime.png)
+
 ## Documentation
 
 - `docs/fft_ieee_paper.tex`: IEEE-format paper root file
