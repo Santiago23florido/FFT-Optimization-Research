@@ -25,6 +25,8 @@ std::vector<fft::Algorithm> power_of_two_algorithms() {
     return {
         fft::Algorithm::Radix2Iterative,
         fft::Algorithm::MixedRadix42Iterative,
+        fft::Algorithm::Radix2SoA,
+        fft::Algorithm::MixedRadix42SoA,
         fft::Algorithm::Radix2Recursive,
         fft::Algorithm::SplitRadix,
     };
@@ -34,6 +36,8 @@ std::vector<fft::Algorithm> all_algorithms() {
     return {
         fft::Algorithm::Radix2Iterative,
         fft::Algorithm::MixedRadix42Iterative,
+        fft::Algorithm::Radix2SoA,
+        fft::Algorithm::MixedRadix42SoA,
         fft::Algorithm::Radix2Recursive,
         fft::Algorithm::SplitRadix,
         fft::Algorithm::DirectDft,
@@ -168,6 +172,41 @@ void test_mixed_matches_radix2_iterative() {
     }
 }
 
+void test_soa_matches_aos_baselines() {
+    std::mt19937_64 rng(0x33333333ULL);
+
+    for (std::size_t n = 2; n <= 4096; n <<= 1U) {
+        for (int sample = 0; sample < 4; ++sample) {
+            const auto x = random_complex_vector(n, rng);
+
+            const auto radix2_aos = fft::fft(x, fft::Algorithm::Radix2Iterative);
+            const auto radix2_soa = fft::fft(x, fft::Algorithm::Radix2SoA);
+            const auto mixed_aos = fft::fft(x, fft::Algorithm::MixedRadix42Iterative);
+            const auto mixed_soa = fft::fft(x, fft::Algorithm::MixedRadix42SoA);
+
+            for (std::size_t k = 0; k < n; ++k) {
+                const double err_radix2 = abs_error(radix2_soa[k], radix2_aos[k]);
+                if (err_radix2 >= kBinTolerance) {
+                    std::ostringstream oss;
+                    oss << "SoA radix-2 mismatch vs AoS radix-2, N=" << n << ", sample=" << sample << ", bin=" << k
+                        << ": error=" << std::setprecision(16) << err_radix2 << " (tolerance " << kBinTolerance
+                        << ')';
+                    throw std::runtime_error(oss.str());
+                }
+
+                const double err_mixed = abs_error(mixed_soa[k], mixed_aos[k]);
+                if (err_mixed >= kBinTolerance) {
+                    std::ostringstream oss;
+                    oss << "SoA mixed42 mismatch vs AoS mixed42, N=" << n << ", sample=" << sample << ", bin=" << k
+                        << ": error=" << std::setprecision(16) << err_mixed << " (tolerance " << kBinTolerance
+                        << ')';
+                    throw std::runtime_error(oss.str());
+                }
+            }
+        }
+    }
+}
+
 void test_pure_complex_tone() {
     const std::size_t n = 256;
     const std::size_t tone = 37;
@@ -260,9 +299,13 @@ void test_invalid_size_rejection() {
 }
 
 void test_algorithm_parser() {
+    expect(fft::parse_algorithm_name("radix2_aos").has_value(), "Failed to parse radix2_aos.");
     expect(fft::parse_algorithm_name("radix2_iterative").has_value(), "Failed to parse radix2_iterative.");
+    expect(fft::parse_algorithm_name("mixed42_aos").has_value(), "Failed to parse mixed42_aos.");
     expect(fft::parse_algorithm_name("mixed_radix_4_2_iterative").has_value(),
            "Failed to parse mixed_radix_4_2_iterative.");
+    expect(fft::parse_algorithm_name("radix2_soa").has_value(), "Failed to parse radix2_soa.");
+    expect(fft::parse_algorithm_name("mixed42_soa").has_value(), "Failed to parse mixed42_soa.");
     expect(fft::parse_algorithm_name("radix2_recursive").has_value(), "Failed to parse radix2_recursive.");
     expect(fft::parse_algorithm_name("split_radix").has_value(), "Failed to parse split_radix.");
     expect(fft::parse_algorithm_name("direct_dft").has_value(), "Failed to parse direct_dft.");
@@ -308,6 +351,7 @@ int main() {
     runner.run("Round-trip ifft(fft(x)) for direct DFT model", test_round_trip_direct_dft);
     runner.run("FFT models match O(N^2) DFT", test_fft_matches_dft_reference);
     runner.run("Mixed radix matches radix2 iterative output order and values", test_mixed_matches_radix2_iterative);
+    runner.run("SoA variants match AoS baselines", test_soa_matches_aos_baselines);
     runner.run("Pure complex tone concentration", test_pure_complex_tone);
     runner.run("Parseval identity", test_parseval_identity);
     runner.run("Invalid size rejection", test_invalid_size_rejection);

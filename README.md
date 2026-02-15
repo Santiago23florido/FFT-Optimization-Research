@@ -4,11 +4,12 @@ C++20 framework for developing and comparing FFT algorithms with a correctness-f
 
 ## Included algorithms
 
-- `radix2_iterative`: iterative in-place Cooley-Tukey with bit-reversal permutation
-- `mixed_radix_4_2_iterative`: iterative mixed radix (4/2) using radix-4 stages and one radix-2 stage when required
+- `radix2_aos`: iterative radix-2 FFT with `std::complex<double>` layout (AoS)
+- `mixed42_aos`: iterative mixed radix (4/2) FFT with `std::complex<double>` layout (AoS)
 - `radix2_recursive`: recursive radix-2 Cooley-Tukey
-- `split_radix`: split-radix FFT with recursive decomposition
+- `split_radix`: split-radix FFT
 - `direct_dft`: exact \(O(N^2)\) DFT reference
+- Layout-optimization variants: `radix2_soa`, `mixed42_soa`
 
 ## Build
 
@@ -26,11 +27,10 @@ ctest --test-dir build -C Release --output-on-failure
 ## Demo
 
 ```bash
-./build/fft_demo --N 1024 --tone 37 --algorithm radix2_iterative --complex_tone
-./build/fft_demo --N 1024 --tone 37 --algorithm mixed_radix_4_2_iterative --complex_tone
-./build/fft_demo --N 1024 --tone 37 --algorithm radix2_recursive --real_sine
-./build/fft_demo --N 1024 --tone 37 --algorithm split_radix --complex_tone
-./build/fft_demo --N 1000 --tone 37 --algorithm direct_dft --complex_tone
+./build/fft_demo --N 1024 --tone 37 --algorithm radix2_aos --complex_tone
+./build/fft_demo --N 1024 --tone 37 --algorithm mixed42_aos --complex_tone
+./build/fft_demo --N 1024 --tone 37 --algorithm radix2_soa --complex_tone
+./build/fft_demo --N 1024 --tone 37 --algorithm mixed42_soa --complex_tone
 ```
 
 ## C++ benchmark (CSV output)
@@ -38,7 +38,7 @@ ctest --test-dir build -C Release --output-on-failure
 ```bash
 ./build/fft_benchmark \
   --sizes 64,128,256,512,1024,2048,4096 \
-  --algorithms radix2_iterative,mixed_radix_4_2_iterative,radix2_recursive,split_radix,direct_dft \
+  --algorithms radix2_aos,mixed42_aos,radix2_recursive,split_radix,direct_dft \
   --iterations 40 \
   --warmup 5 \
   --csv fft_benchmark_summary.csv \
@@ -57,13 +57,16 @@ python3 scripts/fft_benchmark_plot.py \
   --build-dir build \
   --config Release \
   --sizes 64,128,256,512,1024,2048,4096 \
-  --algorithms radix2_iterative,mixed_radix_4_2_iterative,radix2_recursive,split_radix,direct_dft \
+  --algorithms radix2_aos,mixed42_aos,radix2_recursive,split_radix,direct_dft \
   --iterations 40 \
   --warmup 5 \
   --output-dir benchmark_results
 ```
 
-By default, the script synchronizes the same generated files to both `benchmark_results` and `docs/figures` so report and local benchmark artifacts stay identical.
+By default, the script runs two studies and synchronizes outputs to both `benchmark_results` and `docs/figures`:
+
+- Primary algorithmic study (original comparison set) in the root output folder.
+- Secondary layout study (AoS vs SoA) in `layout_optimization/`.
 
 Generated artifacts:
 
@@ -75,6 +78,11 @@ Generated artifacts:
 - `benchmark_results/time_per_sample_ns.png`
 - `benchmark_results/throughput.png`
 - `benchmark_results/throughput_samples_per_s.png`
+- `benchmark_results/layout_optimization/fft_layout_summary.csv`
+- `benchmark_results/layout_optimization/fft_layout_raw.csv`
+- `benchmark_results/layout_optimization/radix2_aos_vs_soa_runtime.png`
+- `benchmark_results/layout_optimization/mixed42_aos_vs_soa_runtime.png`
+- `benchmark_results/layout_optimization/speedup_vs_radix2_aos.png`
 
 `matplotlib` is required for plots.
 

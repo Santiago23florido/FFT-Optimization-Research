@@ -1,0 +1,73 @@
+\section{Memory Layout Optimization: AoS vs SoA}\label{sec:aos_soa}
+
+\subsection{Motivation and Controlled Scope}
+
+The primary benchmark in Section \ref{fig:mean_runtime} compares algorithmic families.  
+This section adds a second, controlled experiment focused only on memory layout for the two strongest iterative baselines: radix-2 and mixed radix (4/2).
+
+AoS and SoA represent two distinct organizations for complex signals:
+\begin{align}
+\text{AoS: } x[n] &= \Re\{x[n]\} + j\,\Im\{x[n]\}, \\
+\text{SoA: } \mathbf{r}[n] &= \Re\{x[n]\},\quad \mathbf{i}[n] = \Im\{x[n]\}.
+\end{align}
+The compared variants are \texttt{radix2\_aos}, \texttt{radix2\_soa}, \texttt{mixed42\_aos}, and \texttt{mixed42\_soa}.
+
+\subsection{Mathematical Equivalence Under Layout Change}
+
+The FFT operator is unchanged:
+\begin{equation}
+X[k] = \sum_{n=0}^{N-1} x[n] e^{-j2\pi kn/N}, \quad
+x[n] = \frac{1}{N}\sum_{k=0}^{N-1} X[k] e^{+j2\pi kn/N}.
+\end{equation}
+Only storage and arithmetic organization differ.
+
+For a generic butterfly with \(u=u_r+ju_i\), \(t=t_r+jt_i\), and twiddle \(w=w_r+jw_i\),
+\begin{align}
+v &= t\,w, \\
+\Re\{v\} &= t_r w_r - t_i w_i, \\
+\Im\{v\} &= t_r w_i + t_i w_r,
+\end{align}
+followed by
+\begin{align}
+y_0 &= u + v, \\
+y_1 &= u - v.
+\end{align}
+AoS computes these relations on interleaved complex objects; SoA computes the same equations on two contiguous real streams. Therefore, spectral outputs are mathematically equivalent up to floating-point roundoff.
+
+\subsection{Performance Rationale}
+
+In AoS, real and imaginary fields are interleaved in memory. In SoA, each field is contiguous, which reduces address-stride irregularity in butterfly loops and can improve cache-line utilization and compiler scheduling. Even without explicit SIMD intrinsics, SoA often provides a better substrate for contiguous loads and future vectorized kernels.
+
+\subsection{SIMD Integration in the SoA Kernels}
+
+The SoA implementations of both iterative radix-2 and iterative mixed radix (4/2) now include explicit SIMD execution paths. The runtime dispatcher selects the widest available vector ISA in the order AVX-512, AVX2, then scalar fallback.
+
+For radix-2, each stage precomputes the twiddle sequences \(\{w_r[j]\}\) and \(\{w_i[j]\}\) and applies butterflies in vector blocks across contiguous index ranges \(j\). For a vector lane set \(\mathcal{J}\), the kernel evaluates
+\begin{align}
+\mathbf{v}_r &= \mathbf{o}_r \odot \mathbf{w}_r - \mathbf{o}_i \odot \mathbf{w}_i,\\
+\mathbf{v}_i &= \mathbf{o}_r \odot \mathbf{w}_i + \mathbf{o}_i \odot \mathbf{w}_r,
+\end{align}
+followed by vector add/subtract updates for the even and odd outputs. Here \(\odot\) denotes element-wise vector multiplication.
+
+For mixed radix (4/2), the fused radix-4 stage uses the same vectorized complex arithmetic for the three twiddle families required by the decomposition:
+\(W_{L}^{j}\), \(W_{2L}^{j}\), and \(jW_{2L}^{j}\) (with sign adapted for inverse transform). The four output branches of each fused butterfly are then updated with vector add/subtract combinations of \((p_0,p_1,t_0,t_1)\), preserving the exact scalar formulation.
+
+Inverse transforms retain the same normalization convention by applying a SIMD vector scaling by \(1/N\) after stage completion.
+
+\subsection{Layout-Study Figures}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/layout_optimization/radix2_aos_vs_soa_runtime.png}
+\caption{Radix-2 runtime comparison under AoS and SoA memory layouts.}
+\label{fig:layout_radix2}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/layout_optimization/mixed42_aos_vs_soa_runtime.png}
+\caption{Mixed radix (4/2) runtime comparison under AoS and SoA memory layouts.}
+\label{fig:layout_mixed42}
+\end{figure}
+
+Figures \ref{fig:layout_radix2} and \ref{fig:layout_mixed42} isolate layout effects by keeping transform definition, normalization, benchmark sizes, warmup policy, and measured iterations fixed. This allows direct attribution of runtime differences to memory organization rather than algorithmic reformulation.
