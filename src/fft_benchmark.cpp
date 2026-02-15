@@ -139,7 +139,7 @@ void print_help(const char* program_name) {
               << "\n"
               << "Options:\n"
               << "  --sizes <csv>        Signal lengths, e.g. 64,128,256,512\n"
-              << "  --algorithms <csv>   radix2_iterative,radix2_recursive,split_radix,direct_dft\n"
+              << "  --algorithms <csv>   radix2_iterative,mixed_radix_4_2_iterative,radix2_recursive,split_radix,direct_dft\n"
               << "  --iterations <n>     Number of measured iterations per size/algorithm\n"
               << "  --warmup <n>         Number of warmup iterations per size/algorithm\n"
               << "  --seed <n>           Base random seed for generated input vectors\n"

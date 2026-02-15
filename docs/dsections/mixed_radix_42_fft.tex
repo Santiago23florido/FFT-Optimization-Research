@@ -1,0 +1,63 @@
+\section{Iterative Mixed-Radix (4/2) FFT}\label{sec:mixed_radix_fft}
+
+The implemented mixed-radix transform targets lengths \(N=2^m\) and is strictly iterative and in-place. The stage plan is defined by the parity of \(m\):
+\begin{itemize}
+\item if \(m\) is even, all stages are executed as radix-4 equivalents;
+\item if \(m\) is odd, one radix-2 stage is executed first, followed by radix-4 equivalents.
+\end{itemize}
+
+The transform uses the same Fourier-sign convention as the other FFT models:
+\begin{align}
+X[k] &= \sum_{n=0}^{N-1} x[n]e^{-j2\pi kn/N}, \\
+x[n] &= \frac{1}{N}\sum_{k=0}^{N-1} X[k]e^{+j2\pi kn/N}.
+\end{align}
+Accordingly, the inverse applies a final \(1/N\) scaling.
+
+\subsection{Ordering Strategy and Equivalence}
+
+The data are first permuted by binary bit-reversal, exactly as in the iterative radix-2 baseline. This is essential: preserving the same input permutation guarantees the same output indexing once each processing stage is algebraically equivalent to the corresponding radix-2 stages.
+
+Each radix-4 stage in this implementation is not introduced as a separate digit-reversal pipeline. Instead, it is constructed as a fusion of two consecutive radix-2 stages. Therefore, for every fused step, the resulting mapping is mathematically identical to applying those two radix-2 stages in sequence; only the computational organization differs.
+
+\subsection{Two-Stage Fusion Formula}
+
+Let \(L\) be the butterfly length of the first stage in a fused pair, and define
+\(W_L=e^{-j2\pi/L}\), \(W_{2L}=e^{-j2\pi/(2L)}\) for the forward transform.  
+For an in-block frequency index \(p\in[0,L/2-1]\), first-stage combinations are
+\begin{align}
+A_0 &= U_0 + W_L^p U_1, &
+A_1 &= U_0 - W_L^p U_1, \\
+B_0 &= V_0 + W_L^p V_1, &
+B_1 &= V_0 - W_L^p V_1.
+\end{align}
+The second stage of length \(2L\) then yields
+\begin{align}
+Y_0 &= A_0 + W_{2L}^p B_0, &
+Y_2 &= A_0 - W_{2L}^p B_0, \\
+Y_1 &= A_1 + \rho\,W_{2L}^p B_1, &
+Y_3 &= A_1 - \rho\,W_{2L}^p B_1,
+\end{align}
+with
+\[
+\rho=
+\begin{cases}
+-j, & \text{forward FFT},\\
++j, & \text{inverse FFT}.
+\end{cases}
+\]
+The \(\rho\) factor corresponds to a quarter-turn phase shift and is the key mixed radix-4/2 coupling term in the fused kernel.
+
+\subsection{Twiddle Evaluation Policy}
+
+To avoid expensive transcendental evaluations in the innermost butterfly loop, each stage computes only principal roots once, then obtains all required powers by multiplicative recurrence. This preserves numerical consistency while reducing loop overhead and instruction latency.
+
+\subsection{Complexity and Practical Implications}
+
+For \(N=2^m\), the number of computational stages is
+\[
+\begin{cases}
+m/2, & m \text{ even},\\
+1+(m-1)/2, & m \text{ odd},
+\end{cases}
+\]
+where each fused stage represents two radix-2 levels. The asymptotic complexity remains \(O(N\log_2N)\), but constant factors can improve due to stage fusion and reduced memory traffic relative to executing two separate radix-2 passes.
