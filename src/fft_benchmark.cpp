@@ -1,5 +1,4 @@
 #include "fft/fft_dispatch.hpp"
-#include "fft/fft_radix2_iterative.hpp"
 
 #include <algorithm>
 #include <chrono>
@@ -20,6 +19,10 @@
 #include <vector>
 
 namespace {
+
+bool is_power_of_two(std::size_t n) {
+    return n != 0 && (n & (n - 1U)) == 0;
+}
 
 struct Options {
     std::vector<std::size_t> sizes = {64, 128, 256, 512, 1024, 2048, 4096};
@@ -136,7 +139,7 @@ void print_help(const char* program_name) {
               << "\n"
               << "Options:\n"
               << "  --sizes <csv>        Signal lengths, e.g. 64,128,256,512\n"
-              << "  --algorithms <csv>   radix2_iterative,radix2_recursive,direct_dft\n"
+              << "  --algorithms <csv>   radix2_iterative,radix2_recursive,split_radix,direct_dft\n"
               << "  --iterations <n>     Number of measured iterations per size/algorithm\n"
               << "  --warmup <n>         Number of warmup iterations per size/algorithm\n"
               << "  --seed <n>           Base random seed for generated input vectors\n"
@@ -295,7 +298,7 @@ BenchmarkStats compute_stats(const std::vector<double>& durations_ns, std::size_
 }
 
 void validate_size_for_algorithm(std::size_t n, fft::Algorithm algorithm) {
-    if (algorithm != fft::Algorithm::DirectDft && !fft::radix2_iterative::is_power_of_two(n)) {
+    if (algorithm != fft::Algorithm::DirectDft && !is_power_of_two(n)) {
         throw std::invalid_argument(std::string("Algorithm ") + fft::algorithm_name(algorithm) +
                                     " requires power-of-two sizes. Invalid N=" + std::to_string(n));
     }

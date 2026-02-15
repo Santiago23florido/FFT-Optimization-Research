@@ -22,11 +22,20 @@ constexpr double kBinTolerance = 1e-10;
 constexpr double kParsevalTolerance = 1e-10;
 
 std::vector<fft::Algorithm> power_of_two_algorithms() {
-    return {fft::Algorithm::Radix2Iterative, fft::Algorithm::Radix2Recursive};
+    return {
+        fft::Algorithm::Radix2Iterative,
+        fft::Algorithm::Radix2Recursive,
+        fft::Algorithm::SplitRadix,
+    };
 }
 
 std::vector<fft::Algorithm> all_algorithms() {
-    return {fft::Algorithm::Radix2Iterative, fft::Algorithm::Radix2Recursive, fft::Algorithm::DirectDft};
+    return {
+        fft::Algorithm::Radix2Iterative,
+        fft::Algorithm::Radix2Recursive,
+        fft::Algorithm::SplitRadix,
+        fft::Algorithm::DirectDft,
+    };
 }
 
 std::vector<std::complex<double>> random_complex_vector(std::size_t n, std::mt19937_64& rng) {
@@ -228,6 +237,7 @@ void test_invalid_size_rejection() {
 void test_algorithm_parser() {
     expect(fft::parse_algorithm_name("radix2_iterative").has_value(), "Failed to parse radix2_iterative.");
     expect(fft::parse_algorithm_name("radix2_recursive").has_value(), "Failed to parse radix2_recursive.");
+    expect(fft::parse_algorithm_name("split_radix").has_value(), "Failed to parse split_radix.");
     expect(fft::parse_algorithm_name("direct_dft").has_value(), "Failed to parse direct_dft.");
     expect(!fft::parse_algorithm_name("unknown").has_value(), "Unknown algorithm should not parse.");
 }
@@ -267,9 +277,9 @@ class TestRunner {
 int main() {
     TestRunner runner;
 
-    runner.run("Round-trip ifft(fft(x)) for radix-2 models", test_round_trip_power_of_two_algorithms);
+    runner.run("Round-trip ifft(fft(x)) for all power-of-two FFT models", test_round_trip_power_of_two_algorithms);
     runner.run("Round-trip ifft(fft(x)) for direct DFT model", test_round_trip_direct_dft);
-    runner.run("Radix-2 FFT models match O(N^2) DFT", test_fft_matches_dft_reference);
+    runner.run("FFT models match O(N^2) DFT", test_fft_matches_dft_reference);
     runner.run("Pure complex tone concentration", test_pure_complex_tone);
     runner.run("Parseval identity", test_parseval_identity);
     runner.run("Invalid size rejection", test_invalid_size_rejection);

@@ -1,6 +1,6 @@
 \section{Benchmark Results and Comparison}
 
-This section compares the implemented transform models using an automated benchmark and plotting workflow. The evaluated algorithms are \texttt{radix2\_iterative}, \texttt{radix2\_recursive}, and \texttt{direct\_dft}. The measured sizes are \(N\in\{64,128,256,512,1024\}\), with 3 warmup iterations and 20 measured iterations per pair \((\text{algorithm},N)\), using seed 1337.
+This section compares the implemented transform models using an automated benchmark and plotting workflow. The evaluated algorithms are \texttt{radix2\_iterative}, \texttt{radix2\_recursive}, \texttt{split\_radix}, and \texttt{direct\_dft}. The measured sizes are \(N\in\{64,128,256,512,1024\}\), with 3 warmup iterations and 20 measured iterations per pair \((\text{algorithm},N)\), using seed 1337.
 
 The plotted quantities are extracted from the benchmark summary data:
 \begin{itemize}
@@ -24,8 +24,8 @@ The plotted quantities are extracted from the benchmark summary data:
 \label{fig:throughput}
 \end{figure}
 
-Figure \ref{fig:mean_runtime} shows the expected complexity separation. The \texttt{direct\_dft} curve grows much faster with \(N\), while both radix-2 implementations scale substantially better. In this benchmark run at \(N=1024\), mean runtime is approximately 16.65~\(\mu s\) for \texttt{radix2\_iterative}, 40.39~\(\mu s\) for \texttt{radix2\_recursive}, and 13,948.47~\(\mu s\) for \texttt{direct\_dft}.
+Figure \ref{fig:mean_runtime} shows the expected complexity separation. The \texttt{direct\_dft} curve grows much faster with \(N\), while the FFT-based models scale substantially better. In this benchmark run at \(N=1024\), mean runtime is approximately 15.27~\(\mu s\) for \texttt{radix2\_iterative}, 25.04~\(\mu s\) for \texttt{split\_radix}, 41.86~\(\mu s\) for \texttt{radix2\_recursive}, and 12,852.67~\(\mu s\) for \texttt{direct\_dft}.
 
-Figure \ref{fig:throughput} presents the same comparison in throughput form. At \(N=1024\), measured throughput is about 61.5 million samples/s for \texttt{radix2\_iterative}, 25.4 million samples/s for \texttt{radix2\_recursive}, and 73.4 thousand samples/s for \texttt{direct\_dft}. This confirms that the iterative in-place radix-2 model is the strongest baseline among the tested implementations for desktop execution.
+Figure \ref{fig:throughput} presents the same comparison in throughput form. At \(N=1024\), measured throughput is about 67.1 million samples/s for \texttt{radix2\_iterative}, 40.9 million samples/s for \texttt{split\_radix}, 24.5 million samples/s for \texttt{radix2\_recursive}, and 79.7 thousand samples/s for \texttt{direct\_dft}. In this environment, split-radix improves over recursive radix-2, but remains slower than the iterative radix-2 baseline, indicating that lower arithmetic count does not automatically dominate memory traffic and traversal overhead.
 
 These results are consistent with the theoretical complexity analysis and provide a reproducible quantitative baseline for future algorithm extensions and microcontroller-oriented optimization.

@@ -1,0 +1,13 @@
+\section{Split-Radix FFT}\label{sec:split_radix_fft}
+
+Split-radix is a structured Cooley-Tukey factorization that combines radix-2 and radix-4 style decomposition in one recursion. For a power-of-two size \(N\), the transform is split into one half-size branch and two quarter-size branches:
+\begin{equation}
+\mathrm{DFT}(N) \rightarrow \mathrm{DFT}(N/2) + \mathrm{DFT}(N/4) + \mathrm{DFT}(N/4).
+\end{equation}
+
+The even-indexed samples feed the \(N/2\) branch. The odd-indexed samples are separated into two classes,
+\(n=4m+1\) and \(n=4m+3\), each producing one \(N/4\) branch. In the implementation, these two odd branches are recombined with twiddle factors and \(\pm j\) rotations to recover the four output quadrants.
+
+Compared to pure radix-2, split-radix reduces arithmetic operation count in theory, especially in multiplication count for large transforms. This makes it a relevant candidate when algorithmic operation complexity is the primary optimization target.
+
+The trade-off is higher implementation complexity. Index mapping is less uniform than standard radix-2 butterflies, and memory access patterns can be less cache-friendly depending on recursion depth, temporary-buffer layout, and compiler optimization. Consequently, wall-clock speedup is architecture-dependent and must be validated experimentally rather than assumed from operation counts alone.
