@@ -1,17 +1,18 @@
 \section{Introduction}
 
-The fast Fourier transform (FFT) is one of the most consequential algorithms in computational science because it reduces the complexity of spectral analysis from \(O(N^2)\) to \(O(N\log_2 N)\) \cite{cooley1965}. This complexity reduction is not only asymptotic theory; it determines practical feasibility in systems constrained by real-time deadlines, bounded power budgets, and finite memory bandwidth.
+The fast Fourier transform (FFT) is one of the most influential algorithms in computational science because it reduces spectral-analysis complexity from \(O(N^2)\) to \(O(N\log_2 N)\) \cite{cooley1965}. This reduction is more than asymptotic theory: it determines whether frequency-domain processing is feasible under real-time deadlines, power constraints, and memory-bandwidth limits.
 
-In modern engineering, many physical phenomena are observed or controlled in time or space domains but are most interpretable in the frequency domain. Spectral decomposition is therefore central to communication receivers, radar processing chains, medical imaging reconstruction, vibration diagnostics, acoustic scene analysis, geophysical inversion, and computational physics. In these systems, FFT quality directly influences detection sensitivity, parameter estimation bias, and downstream model robustness.
+Many engineering systems are measured in time or space domains but interpreted in the frequency domain. As a result, FFT quality affects communication receivers, radar processing, medical imaging reconstruction, vibration diagnostics, acoustic analysis, and geophysical inversion. Numerical mistakes in butterfly indexing, twiddle-factor signs, or normalization can silently produce plausible but physically incorrect spectra, which then propagate through control loops and data-driven pipelines.
 
-From a numerical perspective, FFT implementations are also a reliability-critical component. Small indexing errors in butterfly updates, incorrect exponential signs, or misplaced normalization can silently produce spectra that appear plausible yet are physically wrong. Such defects propagate into control loops, inverse problems, and machine-learning feature pipelines. For this reason, an FFT implementation should be delivered with explicit mathematical conventions and independent verification against a direct DFT baseline.
+In practice, asymptotic complexity alone is insufficient to predict performance. Constant factors from decomposition strategy (radix-2, mixed-radix, split-radix), recursion versus iteration, and memory layout (array-of-structures versus structure-of-arrays) significantly affect runtime and throughput \cite{frigo2005}. A useful FFT study therefore needs both correctness guarantees and reproducible cross-kernel benchmarking.
 
-This work addresses that requirement through a C++20, standard-library-only implementation of radix-2 FFT/IFFT and a test methodology that prioritizes reproducibility, deterministic error reporting, and traceable agreement with Fourier definitions \cite{oppenheim1999}, \cite{bracewell2000}. The main contributions are:
+This work provides a C++20, standard-library-only framework that treats correctness and optimization as coupled objectives rather than separate phases \cite{oppenheim1999}, \cite{bracewell2000}. The main contributions are:
 
 \begin{itemize}
-\item an iterative in-place radix-2 FFT with explicit bit-reversal permutation;
-\item a definition-aligned \(O(N^2)\) DFT/IDFT reference implementation;
-\item automated validation with strict tolerances for round-trip accuracy, bin-wise agreement, tone localization, and energy conservation.
+\item a unified implementation set including iterative radix-2, iterative mixed-radix (4/2), split-radix, and SoA layout-optimized kernels;
+\item a definition-aligned \(O(N^2)\) DFT/IDFT reference used as an independent oracle for all kernels;
+\item automated verification with strict tolerances for bin-wise agreement, round-trip stability, tone localization, and Parseval energy conservation;
+\item a reproducible benchmarking workflow that reports robust timing statistics and derived throughput metrics across problem sizes.
 \end{itemize}
 
-The resulting project forms a rigorous baseline that can be extended toward optimized kernels, mixed-radix strategies, and architecture-specific acceleration while preserving a verifiable correctness core.
+The resulting project establishes a verifiable baseline for education and research, while also quantifying practical speed gains from implementation choices. In the presented experiments, the best optimized kernel (\texttt{mixed42\_soa}) outperforms the baseline iterative radix-2 AoS implementation by up to \(3.61\times\) in mean runtime and \(2.69\times\) on average for \(N\ge128\).

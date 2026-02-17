@@ -100,6 +100,25 @@ Using `docs/figures/layout_optimization/fft_layout_summary.csv` (40 iterations, 
 | 1024 | 14.6696 | 6.7693 | 2.17x | 8.0032 | 5.1472 | 1.55x |
 | 4096 | 74.4707 | 34.7303 | 2.14x | 41.8061 | 27.4085 | 1.53x |
 
+### Baseline FFT vs best optimized kernel
+
+For a direct comparison between a "normal FFT" baseline and the best optimized version in this project, we compare:
+
+- Baseline: `radix2_aos` (iterative radix-2, AoS)
+- Best optimized: `mixed42_soa` (mixed radix 4/2, SoA)
+
+Using mean runtime from `docs/figures/layout_optimization/fft_layout_summary.csv`:
+
+- Average speedup (`N=128..4096`): `2.69x`
+- Maximum observed speedup: `3.61x` at `N=2048`
+
+| Size (N) | radix2_aos (mean us) | mixed42_soa (mean us) | Speedup | radix2_aos throughput (M samples/s) | mixed42_soa throughput (M samples/s) |
+| --- | --- | --- | --- | --- | --- |
+| 128 | 1.3197 | 0.6832 | 1.93x | 96.99 | 187.35 |
+| 1024 | 14.6696 | 5.1472 | 2.85x | 69.80 | 198.94 |
+| 2048 | 35.4499 | 9.8258 | 3.61x | 57.77 | 208.43 |
+| 4096 | 74.4707 | 27.4085 | 2.72x | 55.00 | 149.44 |
+
 ### Result figures
 
 ![Mean runtime comparison](docs/figures/mean_runtime.png)
